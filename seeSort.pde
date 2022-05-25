@@ -7,12 +7,24 @@ make the screen actually display what is happening!!!!
 make it faster somehow, the bad sort works. 
 
 */
-int blockAmt = 250; 
+
+int blockAmt = 4;
 color bg = #000000; color bc = #ffffff; 
 int[] blocks = new int[blockAmt+1]; 
 int greenBlock = blockAmt+1; 
 color GREEN = #00FF00; 
+int last = 0;   
+int m = 0; 
+int sortDelay = 2;   
 
+boolean frame(int d){
+    m = millis()-last; 
+    if (millis() > last+d){
+      last = millis();  
+      return true; 
+    }
+    return false; 
+}
 
 void swap(int a, int b){
     int temp = blocks[a]; 
@@ -24,7 +36,7 @@ void swap(int a, int b){
 void initiateBlocks(){
     for(int i = 0; i < blockAmt; i++){
         blocks[i]=i+1; 
-        println(blocks[i]); 
+        println(blocks[i]);  
     }
 }
 
@@ -37,10 +49,25 @@ void displayBlocks(){
         if (i == greenBlock){
             fill(GREEN); 
         } else {
-            fill(bc); 
+            fill(bc);
         }
         rect(i*w, height-h, w, h); 
     }
+}
+
+void displayBlock(int i){ 
+    int h = (int)((blocks[i])*((float)height/(float)blockAmt));
+    int w = width/blockAmt; 
+    
+    fill(bg);
+    rect(i*w, 0, w, height);
+
+    if (greenBlock == i){
+        fill(GREEN); 
+    } else {
+        fill(bc); 
+    }
+    rect(i*w, height-h, w, h);  
 }
 
 boolean verify(){
@@ -61,12 +88,19 @@ void clearFrame(){
 }
 
 void shuffleBlocks(){
-    println("Shuffling!");
-    for(int i = 0; i < blockAmt; i++){
-        swap(i, (int)random(0, blockAmt)); 
+    println("Shuffling");
+    int i = 0; 
+    while(i < blockAmt){
+        int r = (int)random(0, blockAmt); 
+        if (frame(1)){
+            println("Swapping ", i, " and ", r); 
+            swap(i, r); 
+            displayBlock(r);
+            displayBlock(i);
+            i++; 
+        }
     }
-    println("Done shuffling!"); 
-    displayBlocks(); 
+    println("Shuffling Complete");
 }
 
 void badSort(){
@@ -87,19 +121,28 @@ void badSort(){
     println("Done badsort!"); 
 }
 
+void testSort(int limit, int i){
+    delay(500); 
+    if (i < limit){
+        println("Iterating at ", i); 
+        greenBlock = i; displayBlock(i);
+        if (i!=0){displayBlock(i-1);}   
+        testSort(limit, i+1); 
+    } 
+}
+
 void setup() {
   // setting up the window size and name 
-  size(250, 250);
+  size(100, 100);
   background(bg);
   surface.setTitle("Sort Visualizer"); 
   initiateBlocks(); 
-  displayBlocks();  
-  shuffleBlocks(); 
-  delay(5000); 
-  badSort(); 
+  //displayBlocks();  
+  //shuffleBlocks(); 
+  noStroke(); 
+  testSort(blockAmt, 0); 
 }
 
-  
 void draw() {   
 
 }
