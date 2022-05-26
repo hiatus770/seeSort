@@ -97,7 +97,7 @@ void shuffleBlocks(){
 boolean doneSorting = false; 
 int badSortCnt = 0; 
 void badSort(){
-    if (state != 2 && state != 3){
+    if (state != 2){
         state = 2; 
         println("Starting badsort"); 
     }
@@ -108,14 +108,14 @@ void badSort(){
     if (badSortCnt >= blockAmt){
         badSortCnt = 0; 
     }
-    if (i < blockAmt){ 
+    if (i <= blockAmt){ 
         blockColors[i] = GREEN; 
         blockCache.add(i);
         if (i > 0){
             blockCache.add(i-1);
             blockColors[i-1] = bc;
         }
-        if (blocks[i] > blocks[i+1] && i+1 < blockAmt){
+        if (i+1 < blockAmt && blocks[i] > blocks[i+1]){
             doneSorting = false;
             swap(i, i+1);
             blockColors[i+1] = bc;
@@ -127,27 +127,10 @@ void badSort(){
     if (i == blockAmt-1 && doneSorting == true && state == 2){
         
         badSortCnt = 0;
-        state = 3; // start the greenerizer  
+        state = 0; // start the greenerizer  
         i = 0;
         println("Done badsort!");
     }
-    if (state == 3){
-        println("In greenerizer"); 
-        blockColors[i] = GREEN;
-        blockCache.add(i);
-        if (i == blockAmt-1){
-            state = 0;
-            println("Greenering");
-        }
-        redraw();
-    }
-}
-
-void testSort(int i){
-    delay(1); 
-    println("Iterating at ", i); 
-    greenBlock = i; displayBlock(i);
-    if (i!=0){displayBlock(i-1);}    
 }
 
 void setup() {
@@ -159,8 +142,6 @@ void setup() {
   initiateBlocks(); 
   displayBlocks();   
   noStroke(); 
-  //noLoop(); 
-
 }
 
 void draw() {       
@@ -171,10 +152,11 @@ void draw() {
             displayBlock(blockCache.get(i)); 
             blockCache.remove(i);
         }
+        // Shuffle sequence 
         if (state == 1){
-            // Shuffling sequence. 
             shuffleBlocks(); 
         }
+        // Bad sort O(n^2)
         if (state == 2){
             badSort(); 
         }

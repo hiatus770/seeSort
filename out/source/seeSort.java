@@ -25,9 +25,10 @@ make it faster somehow, the bad sort works.
 
 */
 
-int blockAmt = 100;
+int blockAmt = 25;
 int bg = 0xFF000000; int bc = 0xFFFFFFFF; 
 int[] blocks = new int[blockAmt+1]; 
+int[] blockColors = new int[blockAmt+1]; 
 int greenBlock = blockAmt+1; 
 int GREEN = 0xFF00FF00; 
 int last = 0;   
@@ -35,15 +36,7 @@ int m = 0;
 int sortDelay = 0;   
 int state = 0; // 0 means do nothing, 1
 int shuffleCnt = 0; 
-
- public boolean frame(int d){
-    m = millis()-last; 
-    if (millis() > last+d){
-      last = millis();  
-      return true; 
-    }
-    return false; 
-}
+ArrayList<Integer> blockCache = new ArrayList<Integer>();
 
  public void swap(int a, int b){
     int temp = blocks[a]; 
@@ -54,8 +47,9 @@ int shuffleCnt = 0;
 
  public void initiateBlocks(){
     for(int i = 0; i < blockAmt; i++){
-        blocks[i]=i+1; 
-        println(blocks[i]);  
+        blocks[i]=i+1;
+        blockColors[i] = bc; 
+        println(blocks[i]);
     }
 }
 
@@ -65,12 +59,8 @@ int shuffleCnt = 0;
     for(int i = 0; i < blockAmt; i++){
         int h = (int)((blocks[i])*((float)height/(float)blockAmt));
         int w = width/blockAmt; 
-        if (i == greenBlock){
-            fill(GREEN); 
-        } else {
-            fill(bc);
-        }
-        rect(i*w, height-h, w, h); 
+        fill(blockColors[i]); 
+        rect((i)*w, height-h, w, h); 
     }
 }
 
@@ -81,12 +71,8 @@ int shuffleCnt = 0;
     fill(bg);
     rect(i*w, 0, w, height);
 
-    if (greenBlock == i){
-        fill(GREEN); 
-    } else {
-        fill(bc); 
-    }
-    rect(i*w, height-h, w, h);  
+    fill(blockColors[i]); 
+    rect((i)*w, height-h, w, h); 
 }
 
  public boolean verify(){
@@ -113,6 +99,7 @@ int shuffleCnt = 0;
         state = 1; 
         int r = (int)random(0, blockAmt); 
         swap(i, r); 
+        blockCache.add(i); blockCache.add(r); 
         redraw(); 
         shuffleCnt++; 
     } else {
@@ -127,8 +114,10 @@ int shuffleCnt = 0;
 boolean doneSorting = false; 
 int badSortCnt = 0; 
  public void badSort(){
-    println("Starting badsort"); 
-    state = 2; 
+    if (state != 2){
+        state = 2; 
+        println("Starting badsort"); 
+    }
     int i = badSortCnt; 
     if (badSortCnt == 0){
         doneSorting = true; 
@@ -136,58 +125,59 @@ int badSortCnt = 0;
     if (badSortCnt >= blockAmt){
         badSortCnt = 0; 
     }
-    if (i < blockAmt){
-        greenBlock=i; 
-        if (blocks[i] > blocks[i+1]){
-            doneSorting = false; 
-            swap(i, i+1); 
+    if (i <= blockAmt){ 
+        blockColors[i] = GREEN; 
+        blockCache.add(i);
+        if (i > 0){
+            blockCache.add(i-1);
+            blockColors[i-1] = bc;
         }
-        badSortCnt++; 
-        redraw(); 
+        if (i+1 < blockAmt && blocks[i] > blocks[i+1]){
+            doneSorting = false;
+            swap(i, i+1);
+            blockColors[i+1] = bc;
+            blockCache.add(i+1);
+        }
+        badSortCnt++;
+        redraw();
     }
-    if (i == blockAmt-1 && doneSorting == true){
-        badSortCnt = 0; 
-        state = 0; 
-        println("Done badsort!"); 
-        return; 
+    if (i == blockAmt-1 && doneSorting == true && state == 2){
+        
+        badSortCnt = 0;
+        state = 0; // start the greenerizer  
+        i = 0;
+        println("Done badsort!");
     }
-}
-
- public void testSort(int i){
-    delay(1); 
-    println("Iterating at ", i); 
-    greenBlock = i; displayBlock(i);
-    if (i!=0){displayBlock(i-1);}    
-    
 }
 
  public void setup() {
   // setting up the window size and name 
   /* size commented out by preprocessor */;
   background(bg);
-  frameRate(100); 
-  
+  frameRate(120); 
   surface.setTitle("Sort Visualizer"); 
   initiateBlocks(); 
   displayBlocks();   
   noStroke(); 
-  shuffleBlocks(); 
-  //noLoop(); 
-
 }
 
- public void draw() {   
+ public void draw() {       
     m = millis()-last;
     if (millis() > last+sortDelay){ 
         last = millis();  
-        for(int i = 0; i < blockAmt; i++){
-            displayBlock(i); 
+        for(int i = blockCache.size()-1; i >= 0; i--){ 
+            displayBlock(blockCache.get(i)); 
+            blockCache.remove(i);
         }
+        // Shuffle sequence 
         if (state == 1){
-            // Shuffling sequence. 
             shuffleBlocks(); 
         }
+        // Bad sort O(n^2)
         if (state == 2){
+            badSort(); 
+        }
+        if (state == 3){
             badSort(); 
         }
     }
@@ -209,7 +199,7 @@ int badSortCnt = 0;
 }
 
 
-  public void settings() { size(1000, 1000); }
+  public void settings() { size(500, 500); }
 
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "seeSort" };
