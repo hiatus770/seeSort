@@ -8,14 +8,15 @@ make it faster somehow, the bad sort works.
 
 */
 
-int blockAmt = 4;
+int blockAmt = 100;
 color bg = #000000; color bc = #ffffff; 
 int[] blocks = new int[blockAmt+1]; 
 int greenBlock = blockAmt+1; 
 color GREEN = #00FF00; 
 int last = 0;   
 int m = 0; 
-int sortDelay = 2;   
+int sortDelay = 10;   
+int state = 0; // 0 means do nothing, 1
 
 boolean frame(int d){
     m = millis()-last; 
@@ -91,17 +92,19 @@ void shuffleBlocks(){
     println("Shuffling");
     int i = 0; 
     while(i < blockAmt){
-        int r = (int)random(0, blockAmt); 
-        if (frame(1)){
-            println("Swapping ", i, " and ", r); 
+        m = millis()-last; 
+        if (millis() > last+sortDelay){ 
+            last = millis();
+            int r = (int)random(0, blockAmt); 
             swap(i, r); 
-            displayBlock(r);
-            displayBlock(i);
-            i++; 
+            i++; q
         }
     }
     println("Shuffling Complete");
+    redraw(); 
 }
+
+
 
 void badSort(){
     println("Starting badsort"); 
@@ -121,31 +124,45 @@ void badSort(){
     println("Done badsort!"); 
 }
 
-void testSort(int limit, int i){
-    delay(500); 
-    if (i < limit){
-        println("Iterating at ", i); 
-        greenBlock = i; displayBlock(i);
-        if (i!=0){displayBlock(i-1);}   
-        testSort(limit, i+1); 
-    } 
+void testSort(int i){
+    delay(1); 
+    println("Iterating at ", i); 
+    greenBlock = i; displayBlock(i);
+    if (i!=0){displayBlock(i-1);}    
+    
 }
 
 void setup() {
   // setting up the window size and name 
-  size(100, 100);
+  size(1000, 1000);
   background(bg);
   surface.setTitle("Sort Visualizer"); 
   initiateBlocks(); 
-  //displayBlocks();  
-  //shuffleBlocks(); 
+  displayBlocks();   
   noStroke(); 
-  testSort(blockAmt, 0); 
+  noLoop(); 
+
 }
 
 void draw() {   
-
+    // m = millis()-last;
+    // if (millis() > last+sortDelay){ 
+        last = millis();  
+        for(int i = 0; i < blockAmt; i++){
+            displayBlock(i); 
+        }
+    //}
 }
 
 void keyPressed() {
+    if (key == 'w'){
+        sortDelay+=10; 
+    }   
+    if (key == 's'){
+        sortDelay-=10; 
+    }
+    if (key == 'q'){
+        exit(); 
+    }
+    shuffleBlocks(); 
 }
