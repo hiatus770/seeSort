@@ -1,2 +1,2 @@
 # seeSort
-my trying to make sorting algorithms visible
+my trying to make sorting algorithms visible!
