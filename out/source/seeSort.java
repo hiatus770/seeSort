@@ -32,7 +32,7 @@ int greenBlock = blockAmt+1;
 int GREEN = 0xFF00FF00; 
 int last = 0;   
 int m = 0; 
-int sortDelay = 5;   
+int sortDelay = 0;   
 int state = 0; // 0 means do nothing, 1
 int shuffleCnt = 0; 
 
@@ -165,6 +165,8 @@ int badSortCnt = 0;
   // setting up the window size and name 
   /* size commented out by preprocessor */;
   background(bg);
+  frameRate(100); 
+  
   surface.setTitle("Sort Visualizer"); 
   initiateBlocks(); 
   displayBlocks();   
@@ -176,7 +178,7 @@ int badSortCnt = 0;
 
  public void draw() {   
     m = millis()-last;
-    if (millis() > last+sortDelay || true){ 
+    if (millis() > last+sortDelay){ 
         last = millis();  
         for(int i = 0; i < blockAmt; i++){
             displayBlock(i); 

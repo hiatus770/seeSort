@@ -15,18 +15,10 @@ int greenBlock = blockAmt+1;
 color GREEN = #00FF00; 
 int last = 0;   
 int m = 0; 
-int sortDelay = 5;   
+int sortDelay = 0;   
 int state = 0; // 0 means do nothing, 1
 int shuffleCnt = 0; 
-
-boolean frame(int d){
-    m = millis()-last; 
-    if (millis() > last+d){
-      last = millis();  
-      return true; 
-    }
-    return false; 
-}
+ArrayList<int> cache = new ArrayList<int>();
 
 void swap(int a, int b){
     int temp = blocks[a]; 
@@ -96,6 +88,7 @@ void shuffleBlocks(){
         state = 1; 
         int r = (int)random(0, blockAmt); 
         swap(i, r); 
+        cache.add(i); cache.add(r); 
         redraw(); 
         shuffleCnt++; 
     } else {
@@ -121,9 +114,11 @@ void badSort(){
     }
     if (i < blockAmt){
         greenBlock=i; 
+        cache.add(i); 
         if (blocks[i] > blocks[i+1]){
             doneSorting = false; 
-            swap(i, i+1); 
+            swap(i, i+1);
+            cache.add(i+1);  
         }
         badSortCnt++; 
         redraw(); 
@@ -148,6 +143,7 @@ void setup() {
   // setting up the window size and name 
   size(1000, 1000);
   background(bg);
+  frameRate(100); 
   surface.setTitle("Sort Visualizer"); 
   initiateBlocks(); 
   displayBlocks();   
@@ -157,12 +153,14 @@ void setup() {
 
 }
 
-void draw() {   
+void draw() {       
     m = millis()-last;
-    if (millis() > last+sortDelay || true){ 
+    if (millis() > last+sortDelay){ 
         last = millis();  
-        for(int i = 0; i < blockAmt; i++){
-            displayBlock(i); 
+        for(int i = cache.size()-1; i >= 0; i--){
+            displayBlock(cache[i]); 
+            cache.remove(i); 
+
         }
         if (state == 1){
             // Shuffling sequence. 
