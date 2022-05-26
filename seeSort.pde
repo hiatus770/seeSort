@@ -15,8 +15,9 @@ int greenBlock = blockAmt+1;
 color GREEN = #00FF00; 
 int last = 0;   
 int m = 0; 
-int sortDelay = 10;   
+int sortDelay = 5;   
 int state = 0; // 0 means do nothing, 1
+int shuffleCnt = 0; 
 
 boolean frame(int d){
     m = millis()-last; 
@@ -89,39 +90,50 @@ void clearFrame(){
 }
 
 void shuffleBlocks(){
+    int i = shuffleCnt; 
     println("Shuffling");
-    int i = 0; 
-    while(i < blockAmt){
-        m = millis()-last; 
-        if (millis() > last+sortDelay){ 
-            last = millis();
-            int r = (int)random(0, blockAmt); 
-            swap(i, r); 
-            i++; q
-        }
+    if(i < blockAmt){
+        state = 1; 
+        int r = (int)random(0, blockAmt); 
+        swap(i, r); 
+        redraw(); 
+        shuffleCnt++; 
+    } else {
+        state = 0; shuffleCnt = 0; 
+        println("Shuffling Complete"); 
+        return; 
     }
-    println("Shuffling Complete");
-    redraw(); 
 }
 
 
-
+// when state is 2 
+boolean doneSorting = false; 
+int badSortCnt = 0; 
 void badSort(){
     println("Starting badsort"); 
-    boolean doneSorting = false; 
-    while(!doneSorting){
+    state = 2; 
+    int i = badSortCnt; 
+    if (badSortCnt == 0){
         doneSorting = true; 
-        for(int i = 0; i < blockAmt-1; i++){
-                greenBlock=i; 
-                if (blocks[i] > blocks[i+1]){
-                    doneSorting = false; 
-                    swap(i, i+1); 
-                }
-                displayBlocks(); 
-        }
     }
-
-    println("Done badsort!"); 
+    if (badSortCnt >= blockAmt){
+        badSortCnt = 0; 
+    }
+    if (i < blockAmt){
+        greenBlock=i; 
+        if (blocks[i] > blocks[i+1]){
+            doneSorting = false; 
+            swap(i, i+1); 
+        }
+        badSortCnt++; 
+        redraw(); 
+    }
+    if (i == blockAmt-1 && doneSorting == true){
+        badSortCnt = 0; 
+        state = 0; 
+        println("Done badsort!"); 
+        return; 
+    }
 }
 
 void testSort(int i){
@@ -140,29 +152,39 @@ void setup() {
   initiateBlocks(); 
   displayBlocks();   
   noStroke(); 
-  noLoop(); 
+  shuffleBlocks(); 
+  //noLoop(); 
 
 }
 
 void draw() {   
-    // m = millis()-last;
-    // if (millis() > last+sortDelay){ 
+    m = millis()-last;
+    if (millis() > last+sortDelay || true){ 
         last = millis();  
         for(int i = 0; i < blockAmt; i++){
             displayBlock(i); 
         }
-    //}
+        if (state == 1){
+            // Shuffling sequence. 
+            shuffleBlocks(); 
+        }
+        if (state == 2){
+            badSort(); 
+        }
+    }
 }
 
 void keyPressed() {
     if (key == 'w'){
         sortDelay+=10; 
-    }   
-    if (key == 's'){
+    } else if (key == 's'){
         sortDelay-=10; 
-    }
-    if (key == 'q'){
+    } else if (key == 'q'){
         exit(); 
     }
     shuffleBlocks(); 
+}
+
+void mousePressed() {
+    badSort(); 
 }
